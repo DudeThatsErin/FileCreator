@@ -42,6 +42,15 @@ The plugin will create your file in the selected location and open it automatica
 3. Click "Browse" and search for "File Creator"
 4. Install the plugin and enable it
 
+### Using BRAT (Beta Reviewer's Auto-update Tool)
+
+1. Install the [BRAT plugin](https://github.com/TfTHacker/obsidian42-brat)
+2. Open BRAT settings
+3. Click "Add Beta plugin"
+4. Enter the repository URL: `https://github.com/DudeThatsErin/file-creator`
+5. Click "Add Plugin"
+6. Enable the "File Creator" plugin in your Community Plugins settings
+
 ### Manual Installation
 
 1. Download the latest release from the GitHub repository
