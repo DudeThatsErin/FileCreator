@@ -56,8 +56,8 @@ class FileCreatorModal extends Modal {
             .setName('Folder')
             .setDesc('Select the folder where the file will be created')
             .addDropdown(dropdown => {
-                // Add root folder option with checkmark
-                dropdown.addOption('/', '✓ Root');
+                // Add root folder option with single checkmark
+                dropdown.addOption('/', 'Root');
                 
                 // Get all folders in the vault
                 this.getFolders().forEach(folder => {
@@ -142,52 +142,101 @@ class FileCreatorModal extends Modal {
     async loadPdfTemplates() {
         try {
             // Get the PDF templates path from settings
-            const templatesPath = this.plugin.settings.pdfTemplatesPath;
+            let templatesPath = this.plugin.settings.pdfTemplatesPath || '/00-assets/01-pdfs/';
+            
+            // Ensure the path starts with a slash
+            if (!templatesPath.startsWith('/')) {
+                templatesPath = '/' + templatesPath;
+            }
+            
+            // Ensure the path ends with a slash
+            if (!templatesPath.endsWith('/')) {
+                templatesPath = templatesPath + '/';
+            }
+            
+            // Store the normalized path back in settings
+            this.plugin.settings.pdfTemplatesPath = templatesPath;
+            await this.plugin.saveSettings();
             
             // Check if the folder exists
             if (!(await this.app.vault.adapter.exists(templatesPath))) {
                 new Notice(`PDF templates folder not found: ${templatesPath}`);
+                this.pdfTemplateContainer.createEl('p', {
+                    text: `PDF templates folder not found: ${templatesPath}`,
+                    cls: 'pdf-template-error'
+                });
                 return;
             }
             
-            // Get all files in the templates folder
-            const files = await this.app.vault.adapter.list(templatesPath);
-            const pdfFiles = files.files.filter(file => file.toLowerCase().endsWith('.pdf'));
-            
-            // Create dropdown for template selection
-            if (pdfFiles.length > 0) {
-                new Setting(this.pdfTemplateContainer)
-                    .setName('PDF Template')
-                    .setDesc('Select a PDF template')
-                    .addDropdown(dropdown => {
-                        // Add each PDF file as an option
-                        pdfFiles.forEach(file => {
-                            const fileName = file.split('/').pop();
-                            dropdown.addOption(fileName, fileName);
+            try {
+                // Get all files in the templates folder
+                const files = await this.app.vault.adapter.list(templatesPath);
+                
+                if (!files || !files.files) {
+                    throw new Error('Could not list files in template directory');
+                }
+                
+                const pdfFiles = files.files.filter(file => 
+                    file && typeof file === 'string' && file.toLowerCase().endsWith('.pdf')
+                );
+                
+                // Create dropdown for template selection
+                if (pdfFiles && pdfFiles.length > 0) {
+                    new Setting(this.pdfTemplateContainer)
+                        .setName('PDF Template')
+                        .setDesc('Select a PDF template')
+                        .addDropdown(dropdown => {
+                            // Add each PDF file as an option
+                            pdfFiles.forEach(file => {
+                                if (file && typeof file === 'string') {
+                                    const fileName = file.split('/').pop();
+                                    dropdown.addOption(fileName, fileName);
+                                }
+                            });
+                            
+                            // Set default value
+                            const defaultTemplate = this.plugin.settings.defaultPdfTemplate || 'blank.pdf';
+                            const templateExists = pdfFiles.some(file => 
+                                file.endsWith(defaultTemplate)
+                            );
+                            
+                            if (templateExists) {
+                                dropdown.setValue(defaultTemplate);
+                                this.pdfTemplate = defaultTemplate;
+                            } else if (pdfFiles.length > 0) {
+                                const firstTemplate = pdfFiles[0].split('/').pop();
+                                dropdown.setValue(firstTemplate);
+                                this.pdfTemplate = firstTemplate;
+                                this.plugin.settings.defaultPdfTemplate = firstTemplate;
+                                this.plugin.saveSettings();
+                            }
+                            
+                            dropdown.onChange(value => {
+                                this.pdfTemplate = value;
+                                this.plugin.settings.defaultPdfTemplate = value;
+                                this.plugin.saveSettings();
+                            });
                         });
-                        
-                        // Set default value
-                        if (pdfFiles.includes(templatesPath + this.plugin.settings.defaultPdfTemplate)) {
-                            dropdown.setValue(this.plugin.settings.defaultPdfTemplate);
-                        } else if (pdfFiles.length > 0) {
-                            dropdown.setValue(pdfFiles[0].split('/').pop());
-                        }
-                        
-                        dropdown.onChange(value => {
-                            this.pdfTemplate = value;
-                            this.plugin.settings.defaultPdfTemplate = value;
-                            this.plugin.saveSettings();
-                        });
+                } else {
+                    this.pdfTemplateContainer.createEl('p', {
+                        text: `No PDF templates found in ${templatesPath}`,
+                        cls: 'pdf-template-error'
                     });
-            } else {
+                }
+            } catch (listError) {
+                console.error('Error listing PDF templates:', listError);
                 this.pdfTemplateContainer.createEl('p', {
-                    text: `No PDF templates found in ${templatesPath}`,
+                    text: `Error listing PDF templates: ${listError.message}`,
                     cls: 'pdf-template-error'
                 });
             }
         } catch (error) {
             console.error('Error loading PDF templates:', error);
             new Notice(`Error loading PDF templates: ${error.message}`);
+            this.pdfTemplateContainer.createEl('p', {
+                text: `Error: ${error.message}`,
+                cls: 'pdf-template-error'
+            });
         }
     }
     

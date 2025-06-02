@@ -1,4 +1,6 @@
 {
   "dateFormat": "MMddYYYY",
-  "datePosition": "prefix"
+  "datePosition": "prefix",
+  "pdfTemplatesPath": "/00-assets/01-pdfs/",
+  "defaultPdfTemplate": "one-fourth-inch-blue-lined-paper_unlocked.pdf"
 }
