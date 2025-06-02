@@ -1,0 +1,29 @@
+.file-creator-modal .setting-item {
+  margin-bottom: 12px;
+}
+
+.file-creator-modal input[type="text"] {
+  width: 100%;
+}
+
+.file-creator-modal .setting-item-control {
+  flex-grow: 1;
+}
+
+.file-creator-modal .dropdown {
+  width: 100%;
+}
+
+.pdf-template-container {
+  border-left: 2px solid var(--background-modifier-border);
+  padding-left: 10px;
+  margin-left: 5px;
+  margin-bottom: 15px;
+}
+
+.pdf-template-error {
+  color: var(--text-error);
+  font-style: italic;
+  margin: 5px 0;
+  padding: 5px;
+}

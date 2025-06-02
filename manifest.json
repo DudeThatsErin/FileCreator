@@ -1,0 +1,10 @@
+{
+  "id": "file-creator",
+  "name": "File Creator",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Create files in specific folders with optional date prefixing/suffixing",
+  "author": "Erin Skidds",
+  "authorUrl": "https://github.com/DudeThatsErin",
+  "isDesktopOnly": false
+}
