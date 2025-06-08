@@ -1,0 +1,10 @@
+{
+  "dateFormat": "MMddYYYY",
+  "datePosition": "none",
+  "fileType": "markdown",
+  "pdfTemplatesPath": "/assets/pdfs/",
+  "defaultPdfTemplate": "blank.pdf",
+  "mdTemplatesPath": "/assets/templates/",
+  "defaultMdTemplate": "none",
+  "ignoreFileCreationFolders": "/assets/attachments,/assets/banners,/assets/templater"
+}
