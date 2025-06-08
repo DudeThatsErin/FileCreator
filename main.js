@@ -1,420 +1,17 @@
-const { Plugin, PluginSettingTab, App, Modal, Setting, Notice } = require('obsidian');
+// === File Creator Plugin ===
 
-class FileCreatorPlugin extends Plugin {
-    async onload() {
-        // Add plugin settings
-        this.settings = await this.loadData() || {
-            dateFormat: 'MMddYYYY',
-            datePosition: 'none', // 'none', 'prefix', 'suffix'
-            fileType: 'markdown', // 'markdown', 'pdf'
-            pdfTemplatesPath: '/00-assets/01-pdfs/',
-            defaultPdfTemplate: 'blank.pdf'
-        };
+const { Plugin, PluginSettingTab, App, Modal, Setting, Notice, TFile, normalizePath } = require('obsidian');
 
-        // Add the ribbon icon
-        this.addRibbonIcon('file-plus', 'Create New File', () => {
-            new FileCreatorModal(this.app, this).open();
-        });
-
-        // Add the command to create a new file
-        this.addCommand({
-            id: 'create-new-file',
-            name: 'Create New File',
-            callback: () => {
-                new FileCreatorModal(this.app, this).open();
-            }
-        });
-
-        // Add settings tab
-        this.addSettingTab(new FileCreatorSettingTab(this.app, this));
-    }
-
-    async saveSettings() {
-        await this.saveData(this.settings);
-    }
-}
-
-class FileCreatorModal extends Modal {
-    constructor(app, plugin) {
-        super(app);
-        this.plugin = plugin;
-        this.folderPath = '/';
-        this.fileName = '';
-    }
-
-    onOpen() {
-        const { contentEl } = this;
-        contentEl.empty();
-        contentEl.createEl('h2', { text: 'Create New File' });
-        
-        // File type toggle
-        this.fileType = this.plugin.settings.fileType;
-        this.pdfTemplate = this.plugin.settings.defaultPdfTemplate;
-
-        // Folder selection dropdown
-        new Setting(contentEl)
-            .setName('Folder')
-            .setDesc('Select the folder where the file will be created')
-            .addDropdown(dropdown => {
-                // Add root folder option with single checkmark
-                dropdown.addOption('/', 'Root');
-                
-                // Get all folders in the vault
-                this.getFolders().forEach(folder => {
-                    dropdown.addOption(folder.path, folder.displayPath);
-                });
-                
-                dropdown.onChange(value => {
-                    this.folderPath = value;
-                });
-            });
-
-        // File name input
-        new Setting(contentEl)
-            .setName('File Name')
-            .setDesc('Enter the name for the new file (without extension)')
-            .addText(text => {
-                text.onChange(value => {
-                    this.fileName = value;
-                });
-            });
-
-        // File type toggle
-        new Setting(contentEl)
-            .setName('File Type')
-            .setDesc('Choose the type of file to create')
-            .addDropdown(dropdown => {
-                dropdown
-                    .addOption('markdown', 'Markdown (.md)')
-                    .addOption('pdf', 'PDF from template')
-                    .setValue(this.fileType)
-                    .onChange(value => {
-                        this.fileType = value;
-                        // Update UI based on file type
-                        this.updateFileTypeUI(contentEl);
-                    });
-            });
-            
-        // Container for PDF template selection (will be shown/hidden based on file type)
-        this.pdfTemplateContainer = contentEl.createDiv('pdf-template-container');
-        this.updateFileTypeUI(contentEl);
-        
-        // Date position toggle
-        new Setting(contentEl)
-            .setName('Date Position')
-            .setDesc('Choose where to add the date in the filename')
-            .addDropdown(dropdown => {
-                dropdown
-                    .addOption('none', 'No Date')
-                    .addOption('prefix', 'Prefix (Date-Filename)')
-                    .addOption('suffix', 'Suffix (Filename-Date)')
-                    .setValue(this.plugin.settings.datePosition)
-                    .onChange(value => {
-                        this.plugin.settings.datePosition = value;
-                        this.plugin.saveSettings();
-                    });
-            });
-
-        // Create button
-        new Setting(contentEl)
-            .addButton(button => {
-                button
-                    .setButtonText('Create')
-                    .setCta()
-                    .onClick(() => {
-                        this.createFile();
-                    });
-            });
-    }
-
-    // Update UI based on selected file type
-    updateFileTypeUI(contentEl) {
-        // Clear the PDF template container
-        this.pdfTemplateContainer.empty();
-        
-        // Show PDF template selection if PDF is selected
-        if (this.fileType === 'pdf') {
-            this.loadPdfTemplates();
-        }
-    }
-    
-    // Load PDF templates from the configured folder
-    async loadPdfTemplates() {
-        try {
-            // Get the PDF templates path from settings
-            let templatesPath = this.plugin.settings.pdfTemplatesPath || '/00-assets/01-pdfs/';
-            
-            // Ensure the path starts with a slash
-            if (!templatesPath.startsWith('/')) {
-                templatesPath = '/' + templatesPath;
-            }
-            
-            // Ensure the path ends with a slash
-            if (!templatesPath.endsWith('/')) {
-                templatesPath = templatesPath + '/';
-            }
-            
-            // Store the normalized path back in settings
-            this.plugin.settings.pdfTemplatesPath = templatesPath;
-            await this.plugin.saveSettings();
-            
-            // Check if the folder exists
-            if (!(await this.app.vault.adapter.exists(templatesPath))) {
-                new Notice(`PDF templates folder not found: ${templatesPath}`);
-                this.pdfTemplateContainer.createEl('p', {
-                    text: `PDF templates folder not found: ${templatesPath}`,
-                    cls: 'pdf-template-error'
-                });
-                return;
-            }
-            
-            try {
-                // Get all files in the templates folder
-                const files = await this.app.vault.adapter.list(templatesPath);
-                
-                if (!files || !files.files) {
-                    throw new Error('Could not list files in template directory');
-                }
-                
-                const pdfFiles = files.files.filter(file => 
-                    file && typeof file === 'string' && file.toLowerCase().endsWith('.pdf')
-                );
-                
-                // Create dropdown for template selection
-                if (pdfFiles && pdfFiles.length > 0) {
-                    new Setting(this.pdfTemplateContainer)
-                        .setName('PDF Template')
-                        .setDesc('Select a PDF template')
-                        .addDropdown(dropdown => {
-                            // Add each PDF file as an option
-                            pdfFiles.forEach(file => {
-                                if (file && typeof file === 'string') {
-                                    const fileName = file.split('/').pop();
-                                    dropdown.addOption(fileName, fileName);
-                                }
-                            });
-                            
-                            // Set default value
-                            const defaultTemplate = this.plugin.settings.defaultPdfTemplate || 'blank.pdf';
-                            const templateExists = pdfFiles.some(file => 
-                                file.endsWith(defaultTemplate)
-                            );
-                            
-                            if (templateExists) {
-                                dropdown.setValue(defaultTemplate);
-                                this.pdfTemplate = defaultTemplate;
-                            } else if (pdfFiles.length > 0) {
-                                const firstTemplate = pdfFiles[0].split('/').pop();
-                                dropdown.setValue(firstTemplate);
-                                this.pdfTemplate = firstTemplate;
-                                this.plugin.settings.defaultPdfTemplate = firstTemplate;
-                                this.plugin.saveSettings();
-                            }
-                            
-                            dropdown.onChange(value => {
-                                this.pdfTemplate = value;
-                                this.plugin.settings.defaultPdfTemplate = value;
-                                this.plugin.saveSettings();
-                            });
-                        });
-                } else {
-                    this.pdfTemplateContainer.createEl('p', {
-                        text: `No PDF templates found in ${templatesPath}`,
-                        cls: 'pdf-template-error'
-                    });
-                }
-            } catch (listError) {
-                console.error('Error listing PDF templates:', listError);
-                this.pdfTemplateContainer.createEl('p', {
-                    text: `Error listing PDF templates: ${listError.message}`,
-                    cls: 'pdf-template-error'
-                });
-            }
-        } catch (error) {
-            console.error('Error loading PDF templates:', error);
-            new Notice(`Error loading PDF templates: ${error.message}`);
-            this.pdfTemplateContainer.createEl('p', {
-                text: `Error: ${error.message}`,
-                cls: 'pdf-template-error'
-            });
-        }
-    }
-    
-    async createFile() {
-        if (!this.folderPath) {
-            new Notice('Please specify a folder path');
-            return;
-        }
-
-        if (!this.fileName) {
-            new Notice('Please specify a file name');
-            return;
-        }
-
-        try {
-            // Format the date if needed
-            let finalFileName = this.fileName;
-            
-            if (this.plugin.settings.datePosition !== 'none') {
-                const date = new Date();
-                const formattedDate = this.formatDate(date, this.plugin.settings.dateFormat);
-                
-                if (this.plugin.settings.datePosition === 'prefix') {
-                    finalFileName = `${formattedDate}-${finalFileName}`;
-                } else if (this.plugin.settings.datePosition === 'suffix') {
-                    finalFileName = `${finalFileName}-${formattedDate}`;
-                }
-            }
-
-            // Ensure the folder path doesn't have a trailing slash
-            const normalizedFolderPath = this.folderPath.endsWith('/')
-                ? this.folderPath.slice(0, -1)
-                : this.folderPath;
-
-            // Determine file extension based on file type
-            const fileExtension = this.fileType === 'markdown' ? '.md' : '.pdf';
-            
-            // Create the full file path
-            const filePath = `${normalizedFolderPath}/${finalFileName}${fileExtension}`;
-
-            // Check if file already exists
-            const fileExists = await this.app.vault.adapter.exists(filePath);
-            if (fileExists) {
-                new Notice(`File already exists: ${filePath}`);
-                return;
-            }
-
-            // Create the folder if it doesn't exist
-            if (!(await this.app.vault.adapter.exists(normalizedFolderPath))) {
-                await this.app.vault.createFolder(normalizedFolderPath);
-            }
-
-            // Create the file based on type
-            if (this.fileType === 'markdown') {
-                // Create empty markdown file
-                await this.app.vault.create(filePath, '');
-            } else if (this.fileType === 'pdf') {
-                // Copy the selected PDF template
-                const templatePath = `${this.plugin.settings.pdfTemplatesPath}${this.pdfTemplate}`;
-                
-                try {
-                    // Check if template exists
-                    if (!(await this.app.vault.adapter.exists(templatePath))) {
-                        new Notice(`PDF template not found: ${templatePath}`);
-                        return;
-                    }
-                    
-                    // Read the template file
-                    const templateData = await this.app.vault.adapter.readBinary(templatePath);
-                    
-                    // Write to the new file
-                    await this.app.vault.adapter.writeBinary(filePath, templateData);
-                } catch (error) {
-                    new Notice(`Error creating PDF file: ${error.message}`);
-                    console.error('Error creating PDF file:', error);
-                    return;
-                }
-            }
-            
-            // Show success message
-            new Notice(`File created: ${filePath}`);
-            
-            // Open the newly created file
-            const file = this.app.vault.getAbstractFileByPath(filePath);
-            if (file) {
-                this.app.workspace.getLeaf().openFile(file);
-            }
-            
-            // Close the modal
-            this.close();
-        } catch (error) {
-            new Notice(`Error creating file: ${error.message}`);
-            console.error('Error creating file:', error);
-        }
-    }
-
-    formatDate(date, format) {
-        // Simple date formatter for MMddYYYY format
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const year = date.getFullYear();
-        
-        return format.replace('MM', month)
-                     .replace('dd', day)
-                     .replace('YYYY', year);
-    }
-
-    onClose() {
-        const { contentEl } = this;
-        contentEl.empty();
-    }
-    
-    // Get all folders in the vault with proper indentation for display
-    getFolders() {
-        const folders = [];
-        const rootFolder = this.app.vault.getRoot();
-        
-        // Get all folders in the vault
-        const allFolders = this.getAllFoldersFlat();
-        
-        // Sort folders by path for consistent display
-        allFolders.sort((a, b) => {
-            // Sort by folder name with numeric prefixes handled properly
-            const aName = a.path;
-            const bName = b.path;
-            return aName.localeCompare(bName, undefined, {numeric: true, sensitivity: 'base'});
-        });
-        
-        // Process each folder for display
-        allFolders.forEach(folder => {
-            // Calculate depth based on path segments
-            const pathParts = folder.path.split('/');
-            const depth = pathParts.length - 1;
-            
-            // Create indentation
-            const indent = '  '.repeat(depth);
-            const displayName = pathParts[pathParts.length - 1];
-            
-            folders.push({
-                path: folder.path,
-                displayPath: `${indent}${displayName}`
-            });
-        });
-        
-        return folders;
-    }
-    
-    // Get all folders as a flat list
-    getAllFoldersFlat() {
-        const folders = [];
-        const rootFolder = this.app.vault.getRoot();
-        
-        // Add root folder
-        folders.push({
-            path: '/',
-            folder: rootFolder
-        });
-        
-        // Process all folders recursively
-        const processFolder = (folder, path) => {
-            if (!folder.children) return;
-            
-            folder.children.forEach(child => {
-                if (child.children) { // It's a folder
-                    const childPath = path === '/' ? `/${child.name}` : `${path}/${child.name}`;
-                    folders.push({
-                        path: childPath,
-                        folder: child
-                    });
-                    processFolder(child, childPath);
-                }
-            });
-        };
-        
-        processFolder(rootFolder, '/');
-        return folders;
-    }
-}
+const DEFAULT_SETTINGS = {
+    dateFormat: 'MMddYYYY',
+    datePosition: 'none', // 'none', 'prefix', 'suffix'
+    fileType: 'markdown', // 'markdown', 'pdf'
+    pdfTemplatesPath: '/00-assets/01-pdfs/',
+    defaultPdfTemplate: 'blank.pdf',
+    mdTemplatesPath: '/00-assets/02-templates/',
+    defaultMdTemplate: 'none',
+    ignoreFileCreationFolders: ''
+};
 
 class FileCreatorSettingTab extends PluginSettingTab {
     constructor(app, plugin) {
@@ -431,65 +28,252 @@ class FileCreatorSettingTab extends PluginSettingTab {
         new Setting(containerEl)
             .setName('Date Format')
             .setDesc('Format for the date (default: MMddYYYY)')
-            .addText(text => {
-                text.setValue(this.plugin.settings.dateFormat)
-                    .onChange(async (value) => {
-                        this.plugin.settings.dateFormat = value;
-                        await this.plugin.saveSettings();
-                    });
-            });
+            .addText(text => text.setValue(this.plugin.settings.dateFormat).onChange(async (value) => {
+                this.plugin.settings.dateFormat = value;
+                await this.plugin.saveSettings();
+            }));
 
         new Setting(containerEl)
             .setName('Default Date Position')
             .setDesc('Choose where to add the date in the filename by default')
-            .addDropdown(dropdown => {
-                dropdown
-                    .addOption('none', 'No Date')
-                    .addOption('prefix', 'Prefix (Date-Filename)')
-                    .addOption('suffix', 'Suffix (Filename-Date)')
-                    .setValue(this.plugin.settings.datePosition)
-                    .onChange(async (value) => {
-                        this.plugin.settings.datePosition = value;
-                        await this.plugin.saveSettings();
-                    });
-            });
-            
+            .addDropdown(dropdown => dropdown
+                .addOption('none', 'No Date')
+                .addOption('prefix', 'Prefix (Date-Filename)')
+                .addOption('suffix', 'Suffix (Filename-Date)')
+                .setValue(this.plugin.settings.datePosition)
+                .onChange(async (value) => {
+                    this.plugin.settings.datePosition = value;
+                    await this.plugin.saveSettings();
+                }));
+
         new Setting(containerEl)
             .setName('Default File Type')
             .setDesc('Choose the default type of file to create')
-            .addDropdown(dropdown => {
-                dropdown
-                    .addOption('markdown', 'Markdown (.md)')
-                    .addOption('pdf', 'PDF from template')
-                    .setValue(this.plugin.settings.fileType)
-                    .onChange(async (value) => {
-                        this.plugin.settings.fileType = value;
-                        await this.plugin.saveSettings();
-                    });
-            });
-            
+            .addDropdown(dropdown => dropdown
+                .addOption('markdown', 'Markdown (.md)')
+                .addOption('pdf', 'PDF from template')
+                .setValue(this.plugin.settings.fileType)
+                .onChange(async (value) => {
+                    this.plugin.settings.fileType = value;
+                    await this.plugin.saveSettings();
+                }));
+
         new Setting(containerEl)
             .setName('PDF Templates Path')
             .setDesc('Path to the folder containing PDF templates')
-            .addText(text => {
-                text.setValue(this.plugin.settings.pdfTemplatesPath)
-                    .onChange(async (value) => {
-                        this.plugin.settings.pdfTemplatesPath = value;
-                        await this.plugin.saveSettings();
-                    });
-            });
-            
+            .addText(text => text.setValue(this.plugin.settings.pdfTemplatesPath).onChange(async (value) => {
+                this.plugin.settings.pdfTemplatesPath = value;
+                await this.plugin.saveSettings();
+            }));
+
         new Setting(containerEl)
             .setName('Default PDF Template')
             .setDesc('Default PDF template to use when creating PDF files')
-            .addText(text => {
-                text.setValue(this.plugin.settings.defaultPdfTemplate)
-                    .onChange(async (value) => {
-                        this.plugin.settings.defaultPdfTemplate = value;
-                        await this.plugin.saveSettings();
-                    });
-            });
+            .addText(text => text.setValue(this.plugin.settings.defaultPdfTemplate).onChange(async (value) => {
+                this.plugin.settings.defaultPdfTemplate = value;
+                await this.plugin.saveSettings();
+            }));
+
+        new Setting(containerEl)
+            .setName('Markdown Templates Path')
+            .setDesc('Path to the folder containing Markdown templates')
+            .addText(text => text.setValue(this.plugin.settings.mdTemplatesPath).onChange(async (value) => {
+                this.plugin.settings.mdTemplatesPath = value;
+                await this.plugin.saveSettings();
+            }));
+
+        new Setting(containerEl)
+            .setName('Default Markdown Template')
+            .setDesc('Default markdown template to use when creating markdown files')
+            .addText(text => text.setValue(this.plugin.settings.defaultMdTemplate).onChange(async (value) => {
+                this.plugin.settings.defaultMdTemplate = value;
+                await this.plugin.saveSettings();
+            }));
+
+        new Setting(containerEl)
+            .setName('Ignore Folders During File Creation')
+            .setDesc('Comma-separated list of folder paths to exclude from the target folder dropdown')
+            .addTextArea(text => text.setValue(this.plugin.settings.ignoreFileCreationFolders).onChange(async (value) => {
+                this.plugin.settings.ignoreFileCreationFolders = value;
+                await this.plugin.saveSettings();
+            }));
+    }
+}
+
+class FileCreatorPlugin extends Plugin {
+    async onload() {
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+        this.addSettingTab(new FileCreatorSettingTab(this.app, this));
+        this.addRibbonIcon('file-plus', 'Create New File', () => {
+            // Placeholder for modal logic
+            new FileCreatorModal(this.app, this).open();
+        });
+        this.addCommand({ id: 'create-new-file', name: 'Create New File', callback: () => {
+            // Placeholder for command logic
+            new FileCreatorModal(this.app, this).open();
+        }});
+    }
+
+    async saveSettings() {
+        await this.saveData(this.settings);
+    }
+
+    async loadSettings() {
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
     }
 }
 
 module.exports = FileCreatorPlugin;
+
+class FileCreatorModal extends Modal {
+    constructor(app, plugin) {
+        super(app);
+        this.plugin = plugin;
+        this.fileType = plugin.settings.fileType;
+        this.datePosition = plugin.settings.datePosition;
+        this.fileName = '';
+        this.folderPath = '/';
+        this.template = '';
+    }
+
+    async onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.createEl('h2', { text: 'Create New File' });
+
+        // Folder selection
+        const folderDropdown = new Setting(contentEl)
+            .setName('Target Folder')
+            .setDesc('Select where to save the file')
+            .addDropdown(dropdown => {
+                const folders = this.getAllFolders();
+                dropdown.addOption('/', 'Root');
+                folders.forEach(folder => {
+                    dropdown.addOption(folder, folder);
+                });
+                dropdown.setValue('/');
+                dropdown.onChange(value => this.folderPath = value);
+            });
+
+        // File name input
+        new Setting(contentEl)
+            .setName('File Name')
+            .addText(text => text.onChange(value => this.fileName = value));
+
+        // Date position toggle
+        new Setting(contentEl)
+            .setName('Date Position')
+            .addDropdown(dropdown => dropdown
+                .addOption('none', 'No Date')
+                .addOption('prefix', 'Prefix')
+                .addOption('suffix', 'Suffix')
+                .setValue(this.datePosition)
+                .onChange(value => this.datePosition = value));
+
+        // File type toggle
+        new Setting(contentEl)
+            .setName('File Type')
+            .addDropdown(dropdown => dropdown
+                .addOption('markdown', 'Markdown')
+                .addOption('pdf', 'PDF')
+                .setValue(this.fileType)
+                .onChange(value => {
+                    this.fileType = value;
+                    this.loadTemplates(contentEl);
+                }));
+
+        this.templateContainer = contentEl.createDiv();
+        this.loadTemplates(contentEl);
+
+        // Create button
+        new Setting(contentEl)
+            .addButton(button => button.setButtonText('Create').setCta().onClick(() => this.createFile()));
+    }
+
+    getAllFolders() {
+        const folders = [];
+
+        const traverse = (folder) => {
+            if (!folder) return;
+
+            if (folder.children) {
+                for (const child of folder.children) {
+                    if (!(child instanceof TFile)) {
+                        const path = child.path;
+                        const ignorePaths = this.plugin.settings.ignoreFileCreationFolders.split(',').map(p => normalizePath(p.trim()));
+                        if (!ignorePaths.includes(normalizePath(path))) {
+                            folders.push(path);
+                        }
+                        traverse(child); // Recurse into subfolder
+                    }
+                }
+            }
+        };
+
+        traverse(this.app.vault.getRoot());
+        return folders;
+    }
+
+    async loadTemplates(container) {
+        this.templateContainer.empty();
+        const path = this.fileType === 'pdf' ? this.plugin.settings.pdfTemplatesPath : this.plugin.settings.mdTemplatesPath;
+        const files = (await this.app.vault.adapter.list(path)).files.filter(f => f.endsWith(this.fileType === 'pdf' ? '.pdf' : '.md'));
+
+        if (files.length) {
+            new Setting(this.templateContainer)
+                .setName('Template')
+                .addDropdown(dropdown => {
+                    files.forEach(file => {
+                        const name = file.split('/').pop();
+                        dropdown.addOption(name, name);
+                    });
+                    dropdown.onChange(value => this.template = value);
+                });
+        } else {
+            this.templateContainer.createEl('p', { text: `No ${this.fileType} templates found in ${path}` });
+        }
+    }
+
+    async createFile() {
+        if (!this.fileName || !this.folderPath) return new Notice('Missing name or folder');
+
+        const date = this.formatDate(new Date(), this.plugin.settings.dateFormat);
+        let fullName = this.fileName;
+        if (this.datePosition === 'prefix') fullName = `${date}-${fullName}`;
+        if (this.datePosition === 'suffix') fullName = `${fullName}-${date}`;
+        const ext = this.fileType === 'markdown' ? '.md' : '.pdf';
+        const path = `${this.folderPath}/${fullName}${ext}`;
+
+        if (await this.app.vault.adapter.exists(path)) return new Notice('File already exists');
+        if (!(await this.app.vault.adapter.exists(this.folderPath))) await this.app.vault.createFolder(this.folderPath);
+
+        if (this.fileType === 'markdown') {
+            let content = '';
+            if (this.template) {
+                const tplPath = `${this.plugin.settings.mdTemplatesPath}/${this.template}`;
+                content = await this.app.vault.adapter.read(tplPath);
+            }
+            await this.app.vault.create(path, content);
+        } else {
+            const tplPath = `${this.plugin.settings.pdfTemplatesPath}/${this.template}`;
+            const data = await this.app.vault.adapter.readBinary(tplPath);
+            await this.app.vault.adapter.writeBinary(path, data);
+        }
+
+        const file = this.app.vault.getAbstractFileByPath(path);
+        if (file) this.app.workspace.getLeaf().openFile(file);
+        new Notice(`Created: ${path}`);
+        this.close();
+    }
+
+    formatDate(date, format) {
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        return format.replace('MM', mm).replace('dd', dd).replace('YYYY', yyyy);
+    }
+
+    onClose() {
+        this.contentEl.empty();
+    }
+}

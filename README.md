@@ -4,64 +4,63 @@ A simple yet powerful Obsidian plugin that helps you create files in specific fo
 
 ## Features
 
+### 📝 File Creation
 - **Quick File Creation**: Create new files in any folder in your vault with just a few clicks
-- **Folder Selection**: Browse your vault's folder structure with a dropdown that shows proper indentation
-- **File Type Options**: Create either Markdown notes or PDF files from templates
-- **Date Integration**: Optionally add the current date to your filenames (as prefix or suffix)
-- **PDF Templates**: Create new PDF files based on templates stored in your vault
-- **Customizable Settings**: Configure default options to match your workflow
+- **Folder Selection**: Browse your vault's folder structure with proper indentation
+- **Ignore Folders**: Configure folders to exclude from the dropdown
+- **File Type Options**: Create Markdown notes or PDFs from templates
+- **Date Integration**: Optionally add the current date to your filenames (prefix/suffix/none)
+
+### 📑 Templates
+- **PDF Templates**: Create new PDF files from templates stored in your vault
+- **Markdown Templates**: Select from your own vault markdown templates on file creation
+
+### ⚙️ Customization
+- **Custom Default Settings**: Preconfigure default file type, date position, and templates
+- **Configurable Date Format**: Control how dates are inserted into filenames
 
 ## Usage
 
-### Creating Files
-
-1. Click the "File Creator" icon in the ribbon or use the command palette
-2. Select a folder from the dropdown
-3. Enter a name for your new file
-4. Choose the file type (Markdown or PDF)
-5. If creating a PDF, select a template
-6. Choose whether to include the date in the filename
+1. Click the "File Creator" ribbon icon or run the command from the palette
+2. Choose a target folder
+3. Enter your desired file name
+4. Choose file type (Markdown or PDF)
+5. Select a template (optional)
+6. Choose date prefix/suffix (optional)
 7. Click "Create"
 
-The plugin will create your file in the selected location and open it automatically.
+Your file will be created and opened in Obsidian.
 
-### Settings
+## Settings
 
-- **Date Format**: Customize how dates appear in filenames (default: MMddYYYY)
-- **Default Date Position**: Choose whether dates appear before filenames, after filenames, or not at all
-- **Default File Type**: Set whether new files are Markdown or PDF by default
-- **PDF Templates Path**: Specify where your PDF templates are stored
-- **Default PDF Template**: Choose which PDF template is selected by default
+- **Date Format**: Format string for dates in filenames (default: MMddYYYY)
+- **Default Date Position**: Choose to prefix/suffix or skip date insertion
+- **Default File Type**: Markdown or PDF
+- **PDF Templates Path**: Folder containing PDF templates
+- **Default PDF Template**: File to use as a base for PDFs
+- **Markdown Templates Path**: Folder containing Markdown templates
+- **Default Markdown Template**: Markdown template to use by default
+- **Ignore Folders During File Creation**: Comma-separated list of folders to hide in folder picker
 
 ## Installation
 
-### From Obsidian Plugin Store
+### 📦 Obsidian Plugin Store (Pending Approval)
 
-1. Open Obsidian Settings
-2. Go to Community Plugins and disable Safe Mode
-3. Click "Browse" and search for "File Creator"
-4. Install the plugin and enable it
+You’ll soon be able to find it directly in the Community Plugins browser.
 
-### Using BRAT (Beta Reviewer's Auto-update Tool)
+### 🧪 Using BRAT (Beta Reviewer's Auto-update Tool)
 
 1. Install the [BRAT plugin](https://github.com/TfTHacker/obsidian42-brat)
 2. Open BRAT settings
-3. Click "Add Beta plugin"
-4. Enter the repository URL: `https://github.com/DudeThatsErin/file-creator`
-5. Click "Add Plugin"
-6. Enable the "File Creator" plugin in your Community Plugins settings
-
-### Manual Installation
-
-1. Download the latest release from the GitHub repository
-2. Extract the files to your vault's `.obsidian/plugins/file-creator` folder
-3. Reload Obsidian
-4. Enable the plugin in Settings > Community Plugins
+3. Click **Add Beta Plugin**
+4. Enter: `https://github.com/DudeThatsErin/file-creator`
+5. Click **Add Plugin**
+6. Enable "File Creator" in Community Plugins settings
 
 ## Support
 
-If you encounter any issues or have feature requests, please open an issue on the [GitHub repository](https://github.com/DudeThatsErin/file-creator).
+Open an issue or make a feature request via the [GitHub repository](<https://github.com/DudeThatsErin/file-creator>)
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 - see the LICENSE file for details.
+This plugin is licensed under the GNU General Public License v3.0.
