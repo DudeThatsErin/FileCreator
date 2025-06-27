@@ -1,6 +1,5 @@
 {
   "dateFormat": "MMddYYYY",
-<<<<<<< HEAD
   "datePosition": "none",
   "fileType": "markdown",
   "pdfTemplatesPath": "/assets/pdfs/",
@@ -8,9 +7,4 @@
   "mdTemplatesPath": "/assets/templates/",
   "defaultMdTemplate": "none",
   "ignoreFileCreationFolders": "/assets/attachments,/assets/banners,/assets/templater"
-=======
-  "datePosition": "prefix",
-  "pdfTemplatesPath": "/00-assets/01-pdfs/",
-  "defaultPdfTemplate": "one-fourth-inch-blue-lined-paper_unlocked.pdf"
->>>>>>> 18dd29bf3734cf9647bd5a602dd789c5e8b1a0fa
 }
