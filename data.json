@@ -1,0 +1,10 @@
+{
+  "dateFormat": "MMddYYYY",
+  "datePosition": "prefix",
+  "fileType": "pdf",
+  "pdfTemplatesPath": "assets/pdfs",
+  "defaultPdfTemplate": "blank.pdf",
+  "mdTemplatesPath": "/assets/templates",
+  "defaultMdTemplate": "none",
+  "ignoreFileCreationFolders": "assets"
+}
