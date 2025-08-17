@@ -1,10 +1,12 @@
 {
   "dateFormat": "MMddYYYY",
-  "datePosition": "prefix",
-  "fileType": "pdf",
-  "pdfTemplatesPath": "assets/pdfs",
+  "datePosition": "none",
+  "fileType": "markdown",
+  "pdfTemplatesPath": "/00-assets/01-pdfs/",
   "defaultPdfTemplate": "blank.pdf",
-  "mdTemplatesPath": "/assets/templates",
+  "mdTemplatesPath": "/00-assets/02-templates/",
   "defaultMdTemplate": "none",
-  "ignoreFileCreationFolders": "assets"
+  "ignoreFileCreationFolders": "",
+  "defaultKanbanHeaders": "To Do,Doing,Done",
+  "kanbanCompletedHeaders": "Done"
 }
