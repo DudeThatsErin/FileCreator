@@ -224,23 +224,23 @@ class FileCreatorSettingTab extends PluginSettingTab {
         });
 
         // Kanban Settings
-        containerEl.createEl('h3', { text: 'Kanban Board Settings' });
-        
-        new Setting(containerEl)
-            .setName('Default Kanban Headers')
-            .setDesc('Comma-separated list of default headers for new kanban boards')
-            .addText(text => text.setValue(this.plugin.settings.defaultKanbanHeaders).onChange(async (value) => {
-                this.plugin.settings.defaultKanbanHeaders = value;
-                await this.plugin.saveSettings();
+        this.createAccordionSection(containerEl, 'Kanban Board Settings', () => {
+            new Setting(containerEl)
+                .setName('Default Kanban Headers')
+                .setDesc('Comma-separated list of default headers for new kanban boards')
+                .addText(text => text.setValue(this.plugin.settings.defaultKanbanHeaders).onChange(async (value) => {
+                    this.plugin.settings.defaultKanbanHeaders = value;
+                    await this.plugin.saveSettings();
             }));
 
-        new Setting(containerEl)
-            .setName('Completed Headers')
-            .setDesc('Headers where items should be marked as completed (comma-separated)')
-            .addText(text => text.setValue(this.plugin.settings.kanbanCompletedHeaders).onChange(async (value) => {
-                this.plugin.settings.kanbanCompletedHeaders = value;
-                await this.plugin.saveSettings();
+            new Setting(containerEl)
+                .setName('Completed Headers')
+                .setDesc('Headers where items should be marked as completed (comma-separated)')
+                .addText(text => text.setValue(this.plugin.settings.kanbanCompletedHeaders).onChange(async (value) => {
+                    this.plugin.settings.kanbanCompletedHeaders = value;
+                    await this.plugin.saveSettings();
             }));
+        });
     }
 
     createAccordionSection(containerEl, title, contentCallback) {
