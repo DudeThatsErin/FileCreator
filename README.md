@@ -2,6 +2,11 @@
 
 A comprehensive Obsidian plugin for creating files with advanced options including Kanban boards, base files, PDF templates, and embedding capabilities.
 
+<img width="1640" height="1716" alt="image" src="https://github.com/user-attachments/assets/341d1bc7-6c9e-48bb-bb40-3b86fd6d882d" />
+
+<img width="1578" height="1490" alt="image" src="https://github.com/user-attachments/assets/6c53f7ec-b02c-4c07-952a-474dbd3adfb8" />
+
+
 ## Features
 
 ### 📝 File Creation
