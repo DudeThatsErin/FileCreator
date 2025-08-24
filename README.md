@@ -120,7 +120,7 @@ You’ll soon be able to find it directly in the Community Plugins browser.
 
 ## Support
 
-- 💬 [Discord Support](https://discord.gg/your-discord-server) - Fastest support
+- 💬 [Discord Support](https://discord.gg/XcJWhE3SEA) - Fastest support
 - 🐛 [Report Issues](https://github.com/DudeThatsErin/FileCreator/issues)
 - ⭐ [Star on GitHub](https://github.com/DudeThatsErin/FileCreator)
 - ☕ [Buy Me a Coffee](https://buymeacoffee.com/erinskidds)
