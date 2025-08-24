@@ -35,37 +35,37 @@ class FileCreatorSettingTab extends PluginSettingTab {
          // Support & Links Section
          this.createAccordionSection(containerEl, 'Support & Links', () => {
             const supportContainer = containerEl.createDiv();
-            supportContainer.style.cssText = 'display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0;';
+            supportContainer.className = 'support-container';
             
             const buyMeACoffeeBtn = supportContainer.createEl('a', { 
                 text: '☕ Buy Me a Coffee',
                 href: 'https://buymeacoffee.com/erinskidds'
             });
-            buyMeACoffeeBtn.style.cssText = 'background: #FFDD00; color: #000; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 12px;';
+            buyMeACoffeeBtn.className = 'support-link coffee-link';
             
             const githubBtn = supportContainer.createEl('a', { 
                 text: '⭐ Star on GitHub',
                 href: 'https://github.com/DudeThatsErin/FileCreator'
             });
-            githubBtn.style.cssText = 'background: #24292e; color: #fff; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 12px;';
+            githubBtn.className = 'support-link github-link';
             
             const issuesBtn = supportContainer.createEl('a', { 
                 text: '🐛 Report Issues',
                 href: 'https://github.com/DudeThatsErin/FileCreator/issues'
             });
-            issuesBtn.style.cssText = 'background: #d73a49; color: #fff; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 12px;';
+            issuesBtn.className = 'support-link issues-link';
             
             const discordBtn = supportContainer.createEl('a', { 
                 text: '💬 Discord Support',
-                href: 'https://discord.gg/your-discord-server'
+                href: 'https://discord.gg/XcJWhE3SEA'
             });
-            discordBtn.style.cssText = 'background: #5865F2; color: #fff; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 12px;';
+            discordBtn.className = 'support-link discord-link';
         });
 
         // Template Settings Section
         this.createAccordionSection(containerEl, 'Template Settings', () => {
             new Setting(containerEl)
-                .setName('Templates Path')
+                .setName('Templates path')
                 .setDesc('Path to the folder containing markdown templates')
                 .addText(text => text
                     .setPlaceholder('/00-assets/02-templates/')
@@ -76,7 +76,7 @@ class FileCreatorSettingTab extends PluginSettingTab {
                     }));
 
             new Setting(containerEl)
-                .setName('Default Markdown Template')
+                .setName('Default markdown template')
                 .setDesc('Default markdown template to use when creating markdown files')
                 .addText(text => text
                     .setPlaceholder('none')
@@ -87,7 +87,7 @@ class FileCreatorSettingTab extends PluginSettingTab {
                     }));
 
             new Setting(containerEl)
-                .setName('Base Templates Path')
+                .setName('Base templates path')
                 .setDesc('Path to the folder containing base file templates')
                 .addText(text => text
                     .setPlaceholder('/00-assets/03-base-templates/')
@@ -98,7 +98,7 @@ class FileCreatorSettingTab extends PluginSettingTab {
                     }));
 
             new Setting(containerEl)
-                .setName('Default Base Template')
+                .setName('Default base template')
                 .setDesc('Default base template to use when creating base files')
                 .addText(text => text
                     .setPlaceholder('none')
@@ -109,7 +109,7 @@ class FileCreatorSettingTab extends PluginSettingTab {
                     }));
 
             new Setting(containerEl)
-                .setName('Excalidraw Templates Path')
+                .setName('Excalidraw templates path')
                 .setDesc('Path to the folder containing Excalidraw templates')
                 .addText(text => text
                     .setPlaceholder('/00-assets/04-excalidraw-templates/')
@@ -120,8 +120,8 @@ class FileCreatorSettingTab extends PluginSettingTab {
                     }));
 
             new Setting(containerEl)
-                .setName('Default Excalidraw Template')
-                .setDesc('Default Excalidraw template to use when creating drawings')
+                .setName('Default excalidraw template')
+                .setDesc('Default excalidraw template to use when creating drawings')
                 .addText(text => text
                     .setPlaceholder('none')
                     .setValue(this.plugin.settings.defaultExcalidrawTemplate)
@@ -131,7 +131,7 @@ class FileCreatorSettingTab extends PluginSettingTab {
                     }));
 
             new Setting(containerEl)
-                .setName('PDF Templates Path')
+                .setName('PDF templates path')
                 .setDesc('Path to the folder containing PDF templates')
                 .addText(text => text
                     .setPlaceholder('/00-assets/01-pdfs/')
@@ -142,7 +142,7 @@ class FileCreatorSettingTab extends PluginSettingTab {
                     }));
 
             new Setting(containerEl)
-                .setName('Default PDF Template')
+                .setName('Default PDF template')
                 .setDesc('Default PDF template to use when creating PDF files')
                 .addText(text => text
                     .setPlaceholder('blank.pdf')
@@ -156,7 +156,7 @@ class FileCreatorSettingTab extends PluginSettingTab {
         // File Creation Settings Section
         this.createAccordionSection(containerEl, 'File Creation Settings', () => {
             new Setting(containerEl)
-                .setName('Date Format')
+                .setName('Date format')
                 .setDesc('Format for the date (default: MMddYYYY)')
                 .addText(text => text.setValue(this.plugin.settings.dateFormat).onChange(async (value) => {
                     this.plugin.settings.dateFormat = value;
@@ -164,7 +164,7 @@ class FileCreatorSettingTab extends PluginSettingTab {
                 }));
 
             new Setting(containerEl)
-                .setName('Default Date Position')
+                .setName('Default date position')
                 .setDesc('Choose where to add the date in the filename by default')
                 .addDropdown(dropdown => dropdown
                     .addOption('none', 'No Date')
@@ -177,7 +177,7 @@ class FileCreatorSettingTab extends PluginSettingTab {
                     }));
 
             new Setting(containerEl)
-                .setName('Default File Type')
+                .setName('Default file type')
                 .setDesc('Choose the default type of file to create')
                 .addDropdown(dropdown => dropdown
                     .addOption('markdown', 'Markdown (.md)')
@@ -192,7 +192,7 @@ class FileCreatorSettingTab extends PluginSettingTab {
                     }));
 
             new Setting(containerEl)
-                .setName('Ignore Folders During File Creation')
+                .setName('Ignore folders during file creation')
                 .setDesc('Comma-separated list of folder names to ignore when creating files')
                 .addText(text => text
                     .setPlaceholder('.obsidian, .git, node_modules')
@@ -203,7 +203,7 @@ class FileCreatorSettingTab extends PluginSettingTab {
                     }));
 
             new Setting(containerEl)
-                .setName('Embed Newly Created Files')
+                .setName('Embed newly created files')
                 .setDesc('Automatically embed newly created files into the current note')
                 .addToggle(toggle => toggle
                     .setValue(this.plugin.settings.embedNewFiles)
@@ -213,7 +213,7 @@ class FileCreatorSettingTab extends PluginSettingTab {
                     }));
 
             new Setting(containerEl)
-                .setName('Open Newly Created Files')
+                .setName('Open newly created files')
                 .setDesc('Automatically open newly created files in a new tab')
                 .addToggle(toggle => toggle
                     .setValue(this.plugin.settings.openNewFiles)
@@ -224,9 +224,9 @@ class FileCreatorSettingTab extends PluginSettingTab {
         });
 
         // Kanban Settings
-        this.createAccordionSection(containerEl, 'Kanban Board Settings', () => {
+        this.createAccordionSection(containerEl, 'Kanban board settings', () => {
             new Setting(containerEl)
-                .setName('Default Kanban Headers')
+                .setName('Default kanban headers')
                 .setDesc('Comma-separated list of default headers for new kanban boards')
                 .addText(text => text.setValue(this.plugin.settings.defaultKanbanHeaders).onChange(async (value) => {
                     this.plugin.settings.defaultKanbanHeaders = value;
@@ -234,7 +234,7 @@ class FileCreatorSettingTab extends PluginSettingTab {
             }));
 
             new Setting(containerEl)
-                .setName('Completed Headers')
+                .setName('Completed headers')
                 .setDesc('Headers where items should be marked as completed (comma-separated)')
                 .addText(text => text.setValue(this.plugin.settings.kanbanCompletedHeaders).onChange(async (value) => {
                     this.plugin.settings.kanbanCompletedHeaders = value;
@@ -247,42 +247,17 @@ class FileCreatorSettingTab extends PluginSettingTab {
         const accordionContainer = containerEl.createDiv('accordion-section');
         
         const header = accordionContainer.createDiv('accordion-header');
-        header.style.cssText = `
-            cursor: pointer;
-            padding: 12px 16px;
-            background: var(--background-modifier-border);
-            border: 1px solid var(--background-modifier-border);
-            border-radius: 6px;
-            margin: 16px 0 8px 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-weight: 600;
-            transition: background-color 0.2s ease;
-        `;
+        header.className = 'accordion-header';
         
         const headerText = header.createSpan();
         headerText.textContent = title;
         
         const arrow = header.createSpan('accordion-arrow');
         arrow.textContent = '▼';
-        arrow.style.cssText = `
-            transition: transform 0.2s ease;
-            font-size: 12px;
-        `;
+        arrow.className = 'accordion-arrow';
         
         const content = accordionContainer.createDiv('accordion-content');
-        content.style.cssText = `
-            border-left: 1px solid var(--background-modifier-border);
-            border-right: 1px solid var(--background-modifier-border);
-            border-bottom: 1px solid var(--background-modifier-border);
-            border-radius: 0 0 6px 6px;
-            margin-bottom: 16px;
-            padding: 16px;
-            max-height: 1000px;
-            overflow: hidden;
-            transition: max-height 0.3s ease, padding 0.3s ease;
-        `;
+        content.className = 'accordion-content';
         
         let isExpanded = true; // Start expanded
         
@@ -290,28 +265,25 @@ class FileCreatorSettingTab extends PluginSettingTab {
             isExpanded = !isExpanded;
             
             if (isExpanded) {
-                content.style.maxHeight = '1000px';
-                content.style.padding = '16px';
-                arrow.style.transform = 'rotate(0deg)';
-                header.style.borderRadius = '6px 6px 0 0';
+                content.classList.add('expanded');
+                content.classList.remove('collapsed');
+                arrow.classList.add('expanded');
+                arrow.classList.remove('collapsed');
+                header.classList.add('expanded');
+                header.classList.remove('collapsed');
             } else {
-                content.style.maxHeight = '0';
-                content.style.padding = '0 16px';
-                arrow.style.transform = 'rotate(-90deg)';
-                header.style.borderRadius = '6px';
+                content.classList.add('collapsed');
+                content.classList.remove('expanded');
+                arrow.classList.add('collapsed');
+                arrow.classList.remove('expanded');
+                header.classList.add('collapsed');
+                header.classList.remove('expanded');
             }
         };
         
         header.addEventListener('click', toggleAccordion);
         
-        // Add hover effect
-        header.addEventListener('mouseenter', () => {
-            header.style.backgroundColor = 'var(--background-modifier-hover)';
-        });
-        
-        header.addEventListener('mouseleave', () => {
-            header.style.backgroundColor = 'var(--background-modifier-border)';
-        });
+        // Hover effects are now handled by CSS
         
         // Call the content callback to populate the accordion
         const tempContainer = containerEl.createDiv();
@@ -402,12 +374,12 @@ class FileCreatorModal extends Modal {
 
         // File name input
         new Setting(contentEl)
-            .setName('File Name')
+            .setName('File name')
             .addText(text => text.onChange(value => this.fileName = value));
 
         // Date position toggle
         new Setting(contentEl)
-            .setName('Date Position')
+            .setName('Date position')
             .addDropdown(dropdown => dropdown
                 .addOption('none', 'No Date')
                 .addOption('prefix', 'Prefix')
@@ -417,7 +389,7 @@ class FileCreatorModal extends Modal {
 
         // File type toggle
         new Setting(contentEl)
-            .setName('File Type')
+            .setName('File type')
             .addDropdown(dropdown => dropdown
                 .addOption('markdown', 'Markdown')
                 .addOption('pdf', 'PDF')
