@@ -1,5 +1,7 @@
 # File Creator
 
+> **Note:** Due to disagreements between myself and the Obsidian Team and the way things are ran there - I am no longer maintaining this plugin. Hence the archive. I am willing to send this over to a new maintainer if one would wish to take over development/maintenance.
+
 A comprehensive Obsidian plugin for creating files with advanced options including Kanban boards, base files, PDF templates, and embedding capabilities.
 
 <img width="1640" height="1716" alt="image" src="https://github.com/user-attachments/assets/341d1bc7-6c9e-48bb-bb40-3b86fd6d882d" />
