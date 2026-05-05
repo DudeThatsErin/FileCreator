@@ -17,7 +17,10 @@ const DEFAULT_SETTINGS = {
     ignoreFileCreationFolders: '',
     // Kanban settings
     defaultKanbanHeaders: 'To Do,Doing,Done',
-    kanbanCompletedHeaders: 'Done'
+    kanbanCompletedHeaders: 'Done',
+    kanbanPlugin: 'legacy', // 'legacy' (mgmeyers Kanban) or 'plus' (Kanban Plus)
+    // Enabled file types (shown in modal dropdown)
+    enabledFileTypes: ['markdown', 'pdf', 'kanban', 'base', 'excalidraw']
 };
 
 class FileCreatorSettingTab extends PluginSettingTab {
@@ -64,93 +67,101 @@ class FileCreatorSettingTab extends PluginSettingTab {
 
         // Template Settings Section
         this.createAccordionSection(containerEl, 'Template Settings', () => {
-            new Setting(containerEl)
-                .setName('Templates path')
-                .setDesc('Path to the folder containing markdown templates')
-                .addText(text => text
-                    .setPlaceholder('/00-assets/02-templates/')
-                    .setValue(this.plugin.settings.templatesPath)
-                    .onChange(async (value) => {
-                        this.plugin.settings.templatesPath = value.trim();
-                        await this.plugin.saveSettings();
-                    }));
+            this.addFolderSuggest(
+                new Setting(containerEl)
+                    .setName('Templates path')
+                    .setDesc('Path to the folder containing markdown templates'),
+                this.plugin.settings.mdTemplatesPath || '',
+                async (value) => {
+                    this.plugin.settings.mdTemplatesPath = value.trim();
+                    await this.plugin.saveSettings();
+                }
+            );
 
-            new Setting(containerEl)
-                .setName('Default markdown template')
-                .setDesc('Default markdown template to use when creating markdown files')
-                .addText(text => text
-                    .setPlaceholder('none')
-                    .setValue(this.plugin.settings.defaultMdTemplate)
-                    .onChange(async (value) => {
-                        this.plugin.settings.defaultMdTemplate = value;
-                        await this.plugin.saveSettings();
-                    }));
+            this.addFileSuggest(
+                new Setting(containerEl)
+                    .setName('Default markdown template')
+                    .setDesc('Default markdown template to use when creating markdown files'),
+                this.plugin.settings.defaultMdTemplate,
+                () => this.plugin.settings.mdTemplatesPath || '',
+                ['.md'],
+                async (value) => {
+                    this.plugin.settings.defaultMdTemplate = value;
+                    await this.plugin.saveSettings();
+                }
+            );
 
-            new Setting(containerEl)
-                .setName('Base templates path')
-                .setDesc('Path to the folder containing base file templates')
-                .addText(text => text
-                    .setPlaceholder('/00-assets/03-base-templates/')
-                    .setValue(this.plugin.settings.baseTemplatesPath)
-                    .onChange(async (value) => {
-                        this.plugin.settings.baseTemplatesPath = value.trim();
-                        await this.plugin.saveSettings();
-                    }));
+            this.addFolderSuggest(
+                new Setting(containerEl)
+                    .setName('Base templates path')
+                    .setDesc('Path to the folder containing base file templates'),
+                this.plugin.settings.baseTemplatesPath || '',
+                async (value) => {
+                    this.plugin.settings.baseTemplatesPath = value.trim();
+                    await this.plugin.saveSettings();
+                }
+            );
 
-            new Setting(containerEl)
-                .setName('Default base template')
-                .setDesc('Default base template to use when creating base files')
-                .addText(text => text
-                    .setPlaceholder('none')
-                    .setValue(this.plugin.settings.defaultBaseTemplate)
-                    .onChange(async (value) => {
-                        this.plugin.settings.defaultBaseTemplate = value.trim();
-                        await this.plugin.saveSettings();
-                    }));
+            this.addFileSuggest(
+                new Setting(containerEl)
+                    .setName('Default base template')
+                    .setDesc('Default base template to use when creating base files'),
+                this.plugin.settings.defaultBaseTemplate,
+                () => this.plugin.settings.baseTemplatesPath || '',
+                ['.base'],
+                async (value) => {
+                    this.plugin.settings.defaultBaseTemplate = value;
+                    await this.plugin.saveSettings();
+                }
+            );
 
-            new Setting(containerEl)
-                .setName('Excalidraw templates path')
-                .setDesc('Path to the folder containing Excalidraw templates')
-                .addText(text => text
-                    .setPlaceholder('/00-assets/04-excalidraw-templates/')
-                    .setValue(this.plugin.settings.excalidrawTemplatesPath)
-                    .onChange(async (value) => {
-                        this.plugin.settings.excalidrawTemplatesPath = value.trim();
-                        await this.plugin.saveSettings();
-                    }));
+            this.addFolderSuggest(
+                new Setting(containerEl)
+                    .setName('Excalidraw templates path')
+                    .setDesc('Path to the folder containing Excalidraw templates'),
+                this.plugin.settings.excalidrawTemplatesPath || '',
+                async (value) => {
+                    this.plugin.settings.excalidrawTemplatesPath = value.trim();
+                    await this.plugin.saveSettings();
+                }
+            );
 
-            new Setting(containerEl)
-                .setName('Default excalidraw template')
-                .setDesc('Default excalidraw template to use when creating drawings')
-                .addText(text => text
-                    .setPlaceholder('none')
-                    .setValue(this.plugin.settings.defaultExcalidrawTemplate)
-                    .onChange(async (value) => {
-                        this.plugin.settings.defaultExcalidrawTemplate = value.trim();
-                        await this.plugin.saveSettings();
-                    }));
+            this.addFileSuggest(
+                new Setting(containerEl)
+                    .setName('Default excalidraw template')
+                    .setDesc('Default excalidraw template to use when creating drawings'),
+                this.plugin.settings.defaultExcalidrawTemplate,
+                () => this.plugin.settings.excalidrawTemplatesPath || '',
+                ['.excalidraw.md'],
+                async (value) => {
+                    this.plugin.settings.defaultExcalidrawTemplate = value;
+                    await this.plugin.saveSettings();
+                }
+            );
 
-            new Setting(containerEl)
-                .setName('PDF templates path')
-                .setDesc('Path to the folder containing PDF templates')
-                .addText(text => text
-                    .setPlaceholder('/00-assets/01-pdfs/')
-                    .setValue(this.plugin.settings.pdfTemplatesPath)
-                    .onChange(async (value) => {
-                        this.plugin.settings.pdfTemplatesPath = value.trim();
-                        await this.plugin.saveSettings();
-                    }));
+            this.addFolderSuggest(
+                new Setting(containerEl)
+                    .setName('PDF templates path')
+                    .setDesc('Path to the folder containing PDF templates'),
+                this.plugin.settings.pdfTemplatesPath || '',
+                async (value) => {
+                    this.plugin.settings.pdfTemplatesPath = value.trim();
+                    await this.plugin.saveSettings();
+                }
+            );
 
-            new Setting(containerEl)
-                .setName('Default PDF template')
-                .setDesc('Default PDF template to use when creating PDF files')
-                .addText(text => text
-                    .setPlaceholder('blank.pdf')
-                    .setValue(this.plugin.settings.defaultPdfTemplate)
-                    .onChange(async (value) => {
-                        this.plugin.settings.defaultPdfTemplate = value.trim();
-                        await this.plugin.saveSettings();
-                    }));
+            this.addFileSuggest(
+                new Setting(containerEl)
+                    .setName('Default PDF template')
+                    .setDesc('Default PDF template to use when creating PDF files'),
+                this.plugin.settings.defaultPdfTemplate,
+                () => this.plugin.settings.pdfTemplatesPath || '',
+                ['.pdf'],
+                async (value) => {
+                    this.plugin.settings.defaultPdfTemplate = value;
+                    await this.plugin.saveSettings();
+                }
+            );
         });
 
         // File Creation Settings Section
@@ -194,13 +205,27 @@ class FileCreatorSettingTab extends PluginSettingTab {
             new Setting(containerEl)
                 .setName('Ignore folders during file creation')
                 .setDesc('Comma-separated list of folder names to ignore when creating files')
-                .addText(text => text
-                    .setPlaceholder('.obsidian, .git, node_modules')
-                    .setValue(this.plugin.settings.ignoreFolders)
-                    .onChange(async (value) => {
-                        this.plugin.settings.ignoreFolders = value;
-                        await this.plugin.saveSettings();
-                    }));
+                .addText(text => {
+                    text.setPlaceholder('.obsidian, .git, node_modules')
+                        .setValue(this.plugin.settings.ignoreFolders || '');
+                    const input = text.inputEl;
+                    this._attachSuggest(
+                        input,
+                        (typed) => {
+                            const parts = typed.split(',');
+                            const last = (parts[parts.length - 1] || '').trim().toLowerCase();
+                            const prefix = parts.slice(0, -1).join(',');
+                            return this._getVaultFolders()
+                                .filter(f => f.toLowerCase().includes(last))
+                                .slice(0, 20)
+                                .map(f => (prefix ? prefix + ', ' : '') + f);
+                        },
+                        async (value) => {
+                            this.plugin.settings.ignoreFolders = value;
+                            await this.plugin.saveSettings();
+                        }
+                    );
+                });
 
             new Setting(containerEl)
                 .setName('Embed newly created files')
@@ -223,8 +248,50 @@ class FileCreatorSettingTab extends PluginSettingTab {
                     }));
         });
 
+        // File Types Section
+        this.createAccordionSection(containerEl, 'Enabled file types', () => {
+            const fileTypeOptions = [
+                { key: 'markdown', label: 'Markdown (.md)' },
+                { key: 'pdf',      label: 'PDF from template' },
+                { key: 'kanban',   label: 'Kanban Board (.md)' },
+                { key: 'base',     label: 'Base File (.base)' },
+                { key: 'excalidraw', label: 'Excalidraw Drawing (.excalidraw.md)' }
+            ];
+
+            const desc = containerEl.createEl('p', { text: 'Choose which file types appear in the Create File modal.' });
+            desc.style.marginBottom = '8px';
+
+            fileTypeOptions.forEach(({ key, label }) => {
+                new Setting(containerEl)
+                    .setName(label)
+                    .addToggle(toggle => toggle
+                        .setValue(this.plugin.settings.enabledFileTypes.includes(key))
+                        .onChange(async (value) => {
+                            const current = this.plugin.settings.enabledFileTypes;
+                            if (value && !current.includes(key)) {
+                                this.plugin.settings.enabledFileTypes = [...current, key];
+                            } else if (!value) {
+                                this.plugin.settings.enabledFileTypes = current.filter(t => t !== key);
+                            }
+                            await this.plugin.saveSettings();
+                        }));
+            });
+        });
+
         // Kanban Settings
         this.createAccordionSection(containerEl, 'Kanban board settings', () => {
+            new Setting(containerEl)
+                .setName('Kanban plugin')
+                .setDesc('Which Kanban plugin are you using? This sets the correct frontmatter value.')
+                .addDropdown(dropdown => dropdown
+                    .addOption('legacy', 'Kanban (legacy by mgmeyers)')
+                    .addOption('plus', 'Kanban Plus')
+                    .setValue(this.plugin.settings.kanbanPlugin)
+                    .onChange(async (value) => {
+                        this.plugin.settings.kanbanPlugin = value;
+                        await this.plugin.saveSettings();
+                    }));
+
             new Setting(containerEl)
                 .setName('Default kanban headers')
                 .setDesc('Comma-separated list of default headers for new kanban boards')
@@ -241,6 +308,166 @@ class FileCreatorSettingTab extends PluginSettingTab {
                     await this.plugin.saveSettings();
             }));
         });
+    }
+
+    // Build a custom autocomplete dropdown attached to an input element.
+    // getItems() returns the full list of strings to suggest.
+    // onSelect(value) is called when an item is chosen or the field changes.
+    // transform(raw) optionally transforms the raw input value before calling onSelect.
+    _attachSuggest(input, getItems, onSelect, transform) {
+        input.setAttribute('autocomplete', 'off');
+        const doc = input.ownerDocument;
+
+        const dropdown = doc.createElement('div');
+        dropdown.className = 'fc-suggest-dropdown';
+        dropdown.style.cssText = [
+            'position:absolute',
+            'top:100%',
+            'left:0',
+            'z-index:9999',
+            'background:var(--background-primary)',
+            'border:1px solid var(--background-modifier-border)',
+            'border-radius:4px',
+            'max-height:200px',
+            'overflow-y:auto',
+            'display:none',
+            'width:100%',
+            'box-shadow:0 4px 12px rgba(0,0,0,.2)',
+            'margin-top:2px'
+        ].join(';');
+
+        const wrapper = input.parentElement;
+        wrapper.style.position = 'relative';
+        wrapper.appendChild(dropdown);
+
+        let activeIndex = -1;
+
+        const close = () => {
+            dropdown.style.display = 'none';
+            activeIndex = -1;
+        };
+
+        const open = (items) => {
+            dropdown.innerHTML = '';
+            if (!items.length) { close(); return; }
+            items.forEach((item, i) => {
+                const row = doc.createElement('div');
+                row.className = 'fc-suggest-item';
+                row.textContent = item;
+                row.style.cssText = 'padding:4px 8px;cursor:pointer;font-size:var(--font-ui-small)';
+                row.addEventListener('mouseover', () => {
+                    activeIndex = i;
+                    highlight();
+                });
+                // mousedown fires before blur — this is the key fix
+                row.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    const selected = transform ? transform(item, input.value) : item;
+                    input.value = selected;
+                    onSelect(selected);
+                    close();
+                });
+                dropdown.appendChild(row);
+            });
+            dropdown.style.display = 'block';
+        };
+
+        const highlight = () => {
+            Array.from(dropdown.children).forEach((row, i) => {
+                row.style.background = i === activeIndex
+                    ? 'var(--background-secondary)' : '';
+            });
+        };
+
+        const refresh = () => {
+            const items = getItems(input.value);
+            open(items);
+            activeIndex = -1;
+        };
+
+        input.addEventListener('focus', refresh);
+        input.addEventListener('input', () => {
+            onSelect(transform ? transform(input.value, input.value) : input.value);
+            refresh();
+        });
+        input.addEventListener('blur', close);
+        input.addEventListener('keydown', (e) => {
+            const rows = dropdown.children;
+            if (!rows.length) return;
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeIndex = Math.min(activeIndex + 1, rows.length - 1);
+                highlight();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeIndex = Math.max(activeIndex - 1, 0);
+                highlight();
+            } else if (e.key === 'Enter' && activeIndex >= 0) {
+                e.preventDefault();
+                rows[activeIndex].dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+            } else if (e.key === 'Escape') {
+                close();
+            }
+        });
+    }
+
+    _getVaultFolders() {
+        const folders = [];
+        const traverse = (folder) => {
+            if (!folder || !folder.children) return;
+            for (const child of folder.children) {
+                if (child.children !== undefined) {
+                    folders.push(child.path);
+                    traverse(child);
+                }
+            }
+        };
+        traverse(this.app.vault.getRoot());
+        return folders;
+    }
+
+    // Attach folder autocomplete to a Setting's text input.
+    addFolderSuggest(setting, currentValue, onChange) {
+        setting.addText(text => {
+            text.setValue(currentValue);
+            const input = text.inputEl;
+            this._attachSuggest(
+                input,
+                (typed) => this._getVaultFolders()
+                    .filter(f => f.toLowerCase().includes(typed.toLowerCase()))
+                    .slice(0, 30),
+                (value) => onChange(value)
+            );
+        });
+        return setting;
+    }
+
+    // Attach file autocomplete to a Setting's text input.
+    // 'none' stored value displays as blank; clearing saves 'none'.
+    addFileSuggest(setting, currentValue, folderPathGetter, extensions, onChange) {
+        setting.addText(text => {
+            const displayValue = (!currentValue || currentValue === 'none') ? '' : currentValue;
+            text.setValue(displayValue);
+            const input = text.inputEl;
+            this._attachSuggest(
+                input,
+                (typed) => {
+                    const folderPath = folderPathGetter();
+                    if (!folderPath) return [];
+                    return this.app.vault.getFiles()
+                        .filter(f => {
+                            if (!f.path.startsWith(folderPath.replace(/\/$/, ''))) return false;
+                            if (!extensions || !extensions.length) return true;
+                            return extensions.some(ext => f.name.endsWith(ext));
+                        })
+                        .map(f => f.name)
+                        .filter(name => name.toLowerCase().includes(typed.toLowerCase()))
+                        .slice(0, 30);
+                },
+                (value) => onChange(value.trim() === '' ? 'none' : value.trim())
+            );
+        });
+        return setting;
     }
 
     createAccordionSection(containerEl, title, contentCallback) {
@@ -387,20 +614,31 @@ class FileCreatorModal extends Modal {
                 .setValue(this.datePosition)
                 .onChange(value => this.datePosition = value));
 
-        // File type toggle
+        // File type toggle (only show enabled types)
+        const allFileTypes = [
+            { key: 'markdown',   label: 'Markdown' },
+            { key: 'pdf',        label: 'PDF' },
+            { key: 'kanban',     label: 'Kanban Board' },
+            { key: 'base',       label: 'Base File' },
+            { key: 'excalidraw', label: 'Excalidraw Drawing' }
+        ];
+        const enabledTypes = this.plugin.settings.enabledFileTypes || ['markdown'];
+        // Ensure current fileType is valid given enabled list
+        if (!enabledTypes.includes(this.fileType)) {
+            this.fileType = enabledTypes[0] || 'markdown';
+        }
         new Setting(contentEl)
             .setName('File type')
-            .addDropdown(dropdown => dropdown
-                .addOption('markdown', 'Markdown')
-                .addOption('pdf', 'PDF')
-                .addOption('kanban', 'Kanban Board')
-                .addOption('base', 'Base File')
-                .addOption('excalidraw', 'Excalidraw Drawing')
-                .setValue(this.fileType)
-                .onChange(value => {
+            .addDropdown(dropdown => {
+                allFileTypes
+                    .filter(t => enabledTypes.includes(t.key))
+                    .forEach(t => dropdown.addOption(t.key, t.label));
+                dropdown.setValue(this.fileType);
+                dropdown.onChange(value => {
                     this.fileType = value;
                     this.updateModalContent(contentEl);
-                }));
+                });
+            });
 
         this.templateContainer = contentEl.createDiv();
         this.specialOptionsContainer = contentEl.createDiv();
@@ -783,7 +1021,8 @@ tags: [excalidraw]
     }
 
     generateKanbanContent() {
-        let content = '---\nkanban-plugin: basic\n---\n\n';
+        const kanbanPluginValue = this.plugin.settings.kanbanPlugin === 'plus' ? 'board' : 'basic';
+        let content = `---\nkanban-plugin: ${kanbanPluginValue}\n---\n\n`;
         
         this.kanbanHeaders.forEach(header => {
             const isCompleted = this.kanbanCompletedHeaders.includes(header);
